@@ -4,7 +4,7 @@ An Up-To-Date 3ds homebrew application that lets you use your 3ds as a wireless 
 ## Features
 - Use your 3DS as a wireless gamepad for PC games and emulators
 - Cross-platform support for Windows and Linux
-- All buttons, Circle Pad, C-Stick and touchscreen support
+- All buttons, Circle Pad, C-Stick, NO touch screen support.
 - Configurable server IP and port
 - Low latency wireless connection
 
@@ -85,8 +85,6 @@ An Up-To-Date 3ds homebrew application that lets you use your 3ds as a wireless 
 | L/R Buttons | LB/RB (Left/Right Bumpers) |
 | ZL/ZR Buttons | LT/RT (Left/Right Triggers) |
 | Start/Select | Start/Back |
-| Touch Screen | Currently mapped to mouse movement |
-
 ## Configuration
 
 ### 3DS Configuration
