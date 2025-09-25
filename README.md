@@ -8,6 +8,9 @@ An Up-To-Date 3ds homebrew application that lets you use your 3ds as a wireless 
 - Configurable server IP and port
 - Low latency wireless connection
 
+# But why?
+- Well [I know an application like this already exists]([url](https://github.com/CTurt/3DSController)), but it seems to have stopped working entirely + it's no longer being mantained. 
+
 ## Requirements
 
 ### 3DS Requirements
