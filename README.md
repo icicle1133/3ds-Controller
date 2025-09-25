@@ -98,61 +98,103 @@ An Up-To-Date 3ds homebrew application that lets you use your 3ds as a wireless 
   python pc.py --debug
   ```
 
-## Building from Source
+# Building from Source
 
 ### Requirements
 - DevkitPro and DevkitARM installed
 - 3DS development libraries (libctru)
 
-### Building
-1. Clone the repository
-2. Run `make` to build the 3DS application
-3. The output file will be in the project root directory as `3ds_controller.3dsx`
+## Building from Source
 
-## Roadmap
+### Requirements
 
-### Short-term Goals
+#### For 3DS Application
+- DevkitPro and DevkitARM installed
+- 3DS development libraries (libctru)
+- Make utility
+
+#### For PC Application
+- Python 3.6+
+- For Windows: ViGEmBus driver
+- For Linux: uinput module and development headers
+
+### Building the 3DS Application
+
+1. Install DevkitPro with 3DS support
+   ```
+   # Windows
+   # Download and run the installer from https://devkitpro.org/wiki/Getting_Started
+
+   # Linux/macOS
+   wget https://apt.devkitpro.org/install-devkitpro-pacman
+   chmod +x ./install-devkitpro-pacman
+   sudo ./install-devkitpro-pacman
+   sudo dkp-pacman -S 3ds-dev
+   ```
+
+2. Set up environment variables (if not set by installer)
+   ```
+   # Add to your .bashrc or .zshrc
+   export DEVKITPRO=/opt/devkitpro
+   export DEVKITARM=${DEVKITPRO}/devkitARM
+   ```
+
+3. Clone the repository
+   ```
+   git clone https://github.com/yourusername/3ds-controller.git
+   cd 3ds-controller
+   ```
+
+4. Build the application
+   ```
+   make clean
+   make
+   ```
+
+5. The output file will be in the project root directory as `3ds_controller.3dsx`
+
+### Building for Windows Development
+
+1. Ensure you have Python 3.6+ installed
+2. Install required packages:
+   ```
+   pip install vgamepad
+   ```
+3. Install ViGEmBus driver from [here](https://github.com/ViGEm/ViGEmBus/releases)
+4. No compilation needed - run the Python script directly:
+   ```
+   python pc.py
+   ```
+
+### Building for Linux Development
+
+1. Install required system dependencies:
+   ```
+   sudo apt-get install python3-dev libudev-dev
+   ```
+2. Install Python packages:
+   ```
+   pip install python-uinput
+   ```
+3. Ensure uinput module is loaded:
+   ```
+   sudo modprobe uinput
+   ```
+4. No compilation needed - run the Python script with root privileges:
+   ```
+   sudo python pc.py
+   ```
+5. the 3ds app is the same process as windows, except for installing devkitpro. go follow that.
+
+### Goals
 - [ ] Fix false "connected" status when no server is running
 - [ ] Improve mouse input handling for touchscreen
 - [ ] Add ability to save multiple server configurations
 - [ ] Implement connection status checking
 - [ ] Add battery level indicator
-
-### Medium-term Goals
-- [ ] Add GUI improvements with Citro2D/3D
-- [ ] Add controller profiles for different games/emulators
-- [ ] Implement controller rumble feedback
-- [ ] Automatic IP discovery of PC
-- [ ] Motion controls support
-
-### Long-term Goals
-- [ ] 3D display integration
-- [ ] Audio streaming from PC to 3DS
-- [ ] Dual-screen emulator support
-- [ ] CIA version with Wake-on-WLAN support
-- [ ] Multiple controller mode (for local multiplayer)
-
-## Troubleshooting
-
-### Common Issues
-
-**Issue**: 3DS cannot connect to PC  
-**Solution**: Make sure both devices are on the same network and check your firewall settings to allow UDP port 8888
-
-**Issue**: Controller inputs are not recognized  
-**Solution**: Ensure the ViGEmBus driver is correctly installed on Windows or uinput module is loaded on Linux
-
-**Issue**: Linux version fails with permission errors  
-**Solution**: Make sure you're running the script with root privileges (`su -` or `sudo`)
-
-**Issue**: High latency or lag  
-**Solution**: Reduce network congestion and ensure your 3DS has a good Wi-Fi signal
+- [ ] Add a customizable keybind for turning off lcd (to save battery life)
+- [ ] Add multiple device connections for a local multiplayer type thing (really meant for emulators)
 
 ## License
 
 This project is protected by the PolyForm Noncommercial License
-
-## Acknowledgements
-
-- Thanks to the devkitPro team for the 3DS development tools
-- Thanks to the ViGEm project for the virtual controller drivers
