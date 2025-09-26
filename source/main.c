@@ -28,7 +28,7 @@ typedef struct {
     int port;
     u32 lcdtogglekey;
 } config;
-
+// the actual config reading bs that i didn't do correctly as my 3ds as of 9/25/2025 @ 7:29 pm shows 192.168.1.1 lol
 void readconfigfile(config *cfg) {
     strcpy(cfg->serverip, DEFAULT_SERVER_IP);
     cfg->port = DEFAULT_PORT;
