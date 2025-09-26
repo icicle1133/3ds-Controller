@@ -107,7 +107,7 @@ An up-to-date 3DS homebrew application that lets you use your Nintendo 3DS as a 
 - Windows: ViGEmBus driver
 - Linux: uinput module and headers
 
-### Building 3DS Application
+# Building 3DS Application
 
 1. Install DevkitPro with 3DS support
    ```
@@ -120,25 +120,51 @@ An up-to-date 3DS homebrew application that lets you use your Nintendo 3DS as a 
    sudo dkp-pacman -S 3ds-dev
    ```
 
-2. Set environment variables (if needed)
+2. Install CIA building tools (makerom and bannertool)
+   ```
+   # Windows
+   # Download makerom and bannertool from:
+   # - makerom: https://github.com/3DSGuy/Project_CTR/releases
+   # - bannertool: https://github.com/Steveice10/bannertool/releases
+   # Add both to your PATH
+
+   # Linux/macOS
+   git clone https://github.com/3DSGuy/Project_CTR.git
+   cd Project_CTR/makerom
+   make
+   sudo cp makerom /usr/local/bin
+
+   git clone https://github.com/Steveice10/bannertool.git
+   cd bannertool
+   make
+   sudo cp output/*/bannertool /usr/local/bin
+   ```
+
+3. Set environment variables (if needed)
    ```
    export DEVKITPRO=/opt/devkitpro
    export DEVKITARM=${DEVKITPRO}/devkitARM
    ```
 
-3. Clone repository
+4. Clone repository
    ```
    git clone https://github.com/icicle1133/3ds-controller.git
    cd 3ds-controller
    ```
 
-4. Build application
+5. Build application
    ```
+   # For 3DSX file
    make clean
    make
+
+   # For CIA file
+   make cia
    ```
 
-5. Output file: `3ds_controller.3dsx`
+6. Output files:
+   - `3ds_controller.3dsx` (Homebrew format)
+   - `3ds_controller.cia` (CIA format for installation via FBI)
 
 # Development Setup
 
