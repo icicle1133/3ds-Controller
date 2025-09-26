@@ -142,7 +142,7 @@ An Up-To-Date 3ds homebrew application that lets you use your 3ds as a wireless 
 
 3. Clone the repository
    ```
-   git clone https://github.com/yourusername/3ds-controller.git
+   git clone https://github.com/icicle1133/3ds-controller.git
    cd 3ds-controller
    ```
 
@@ -188,12 +188,11 @@ An Up-To-Date 3ds homebrew application that lets you use your 3ds as a wireless 
 5. the 3ds app is the same process as windows, except for installing devkitpro. go follow that.
 
 ### Goals
-- [ ] Fix false "connected" status when no server is running
-- [ ] Improve mouse input handling for touchscreen
+- [x] Fix false "connected" status when no server is running
 - [ ] Add ability to save multiple server configurations
-- [ ] Implement connection status checking
-- [ ] Add battery level indicator
-- [ ] Add a customizable keybind for turning off lcd (to save battery life)
+- [x] Implement connection status checking
+- [x] Add battery level indicator
+- [x] Add a customizable keybind for turning off lcd (to save battery life)
 - [ ] Add multiple device connections for a local multiplayer type thing (really meant for emulators)
 
 ## License
