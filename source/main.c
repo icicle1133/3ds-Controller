@@ -156,16 +156,21 @@ void getbatterystatus(char *buffer, size_t size) {
     u8 charging;
     PTMU_GetBatteryChargeState(&charging);
     
-    const char *icons[] = {"[----]", "[#---]", "[##--]", "[###-]", "[####]"};
+    char icon[6];
     int level = percentage;
     
     if (level < 0) level = 0;
     if (level > 4) level = 4;
     
+    for (int i = 0; i < 5; i++) {
+        icon[i] = (i <= level) ? '|' : ' ';
+    }
+    icon[5] = '\0';
+    
     if (charging) {
-        snprintf(buffer, size, "%s CHRG", icons[level]);
+        snprintf(buffer, size, "[%s] +", icon);
     } else {
-        snprintf(buffer, size, "%s %d%%", icons[level], (level + 1) * 20);
+        snprintf(buffer, size, "[%s] %d%%", icon, (level + 1) * 20);
     }
 }
 
@@ -175,28 +180,47 @@ void printstatusmessage(int sockfd, const config *cfg, int isconnected, int lcds
     char batterystatus[32];
     getbatterystatus(batterystatus, sizeof(batterystatus));
     
-    printf("\x1b[1;1H╔════════════════════════════╗");
-    printf("\x1b[2;1H║  3DS CONTROLLER            ║");
-    printf("\x1b[3;1H╠════════════════════════════╣");
+    // Top border with corners
+    printf("\x1b[0;0H+----------------------+");
     
+    // Title with padding
+    printf("\x1b[1;0H|    \x1b[1;36m3DS CONTROLLER\x1b[0m    |");
+    
+    // Separator line
+    printf("\x1b[2;0H+----------------------+");
+    
+    // Status line with color indicator
     if (isconnected) {
-        printf("\x1b[4;1H║ STATUS: \x1b[32mCONNECTED\x1b[0m         ║");
+        printf("\x1b[3;0H| Status: \x1b[32mCONNECTED\x1b[0m    |");
     } else {
-        printf("\x1b[4;1H║ STATUS: \x1b[31mDISCONNECTED\x1b[0m      ║");
+        printf("\x1b[3;0H| Status: \x1b[31mNO CONNECTION\x1b[0m |");
     }
     
-    printf("\x1b[5;1H║ SERVER: %-18s ║", cfg->serverip);
-    printf("\x1b[6;1H║ PORT:   %-18d ║", cfg->port);
-    printf("\x1b[7;1H║ BATT:   %-18s ║", batterystatus);
-    printf("\x1b[8;1H║ LCD:    %-18s ║", lcdstate ? "ON" : "OFF");
-    printf("\x1b[9;1H╠════════════════════════════╣");
-    printf("\x1b[10;1H║ CONTROLS:                  ║");
-    printf("\x1b[11;1H║ • Circle Pad: Movement     ║");
-    printf("\x1b[12;1H║ • C-Stick: Right Analog    ║");
-    printf("\x1b[13;1H║ • A/B/X/Y: Action Buttons  ║");
-    printf("\x1b[14;1H║ • L/R/ZL/ZR: Triggers      ║");
-    printf("\x1b[15;1H║ • D-Pad: Directional       ║");
-    printf("\x1b[16;1H║ • START+SELECT: Exit       ║");
+    // Connection info
+    printf("\x1b[4;0H| IP: %-16s |", cfg->serverip);
+    printf("\x1b[5;0H| Port: %-15d |", cfg->port);
+    
+    // System status
+    printf("\x1b[6;0H| Battery: %-11s |", batterystatus);
+    
+    if (lcdstate) {
+        printf("\x1b[7;0H| Display: \x1b[32mON\x1b[0m           |");
+    } else {
+        printf("\x1b[7;0H| Display: \x1b[31mOFF\x1b[0m          |");
+    }
+    
+    // Separator before controls
+    printf("\x1b[8;0H+----------------------+");
+    
+    // Controls header
+    printf("\x1b[9;0H|      \x1b[1;33mCONTROLS\x1b[0m       |");
+    
+    // Control items
+    printf("\x1b[10;0H| CirclePad: Left Stick |");
+    printf("\x1b[11;0H| C-Stick: Right Stick  |");
+    printf("\x1b[12;0H| A/B/X/Y: Face Buttons |");
+    printf("\x1b[13;0H| L/R/ZL/ZR: Triggers   |");
+    printf("\x1b[14;0H| D-Pad: Directional    |");
     
     char keylabel[10] = "L";
     if (cfg->lcdtogglekey == KEY_R) strcpy(keylabel, "R");
@@ -204,8 +228,11 @@ void printstatusmessage(int sockfd, const config *cfg, int isconnected, int lcds
     else if (cfg->lcdtogglekey == KEY_ZR) strcpy(keylabel, "ZR");
     else if (cfg->lcdtogglekey == KEY_SELECT) strcpy(keylabel, "SELECT");
     
-    printf("\x1b[17;1H║ • HOLD %s: Toggle LCD      ║", keylabel);
-    printf("\x1b[18;1H╚════════════════════════════╝");
+    printf("\x1b[15;0H| Hold %s: Toggle LCD   |", keylabel);
+    printf("\x1b[16;0H| START+SELECT: Exit    |");
+    
+    // Bottom border
+    printf("\x1b[17;0H+----------------------+");
 }
 
 int main(int argc, char **argv) {
