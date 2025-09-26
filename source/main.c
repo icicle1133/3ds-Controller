@@ -12,7 +12,7 @@
 
 #define DEFAULT_PORT 8888
 #define DEFAULT_SERVER_IP "192.168.1.1" // please change in case i didn't do config.ini correctly!
-#define CONFIG_FILE "config.ini"
+#define CONFIG_FILE "/config.ini" // i swear if its because i didn't add a /
 #define MAX_LINE 256
 #define LCD_TOGGLE_KEY KEY_L
 #define CONNECTION_TIMEOUT_MS 5000
