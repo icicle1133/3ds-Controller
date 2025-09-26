@@ -10,7 +10,7 @@ An Up-To-Date 3ds homebrew application that lets you use your 3ds as a wireless 
 
 # But why?
 - Well I know [an application like this already exists](https://github.com/CTurt/3DSController), but it seems to have stopped working entirely + it's no longer being mantained. 
-- also you can view time here: [wakatime](https://wakatime.com/@icicle1133)
+- also you can view time here: [![wakatime](https://wakatime.com/badge/user/5089f166-a996-455c-8cbe-f75a0e2076db.svg)](https://wakatime.com/@5089f166-a996-455c-8cbe-f75a0e2076db)
 
 ## Requirements
 
