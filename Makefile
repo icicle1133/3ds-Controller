@@ -31,7 +31,7 @@ include $(DEVKITARM)/3ds_rules
 #     - icon.png
 #     - <libctru folder>/default_icon.png
 #---------------------------------------------------------------------------------
-TARGET		:=	$(notdir $(CURDIR))
+TARGET		:=	3ds_controller
 BUILD		:=	build
 SOURCES		:=	source
 DATA		:=	data
@@ -43,7 +43,9 @@ GFXBUILD	:=	$(BUILD)
 
 APP_TITLE       := 3DS Controller
 APP_DESCRIPTION := Use 3DS as a wireless PC controller
-APP_AUTHOR      := icicle1133
+APP_AUTHOR      := Your Name
+APP_PRODUCT_CODE := CTR-P-3DSC
+APP_UNIQUE_ID   := 0xA1B2C
 
 #---------------------------------------------------------------------------------
 # options for code generation
@@ -162,11 +164,13 @@ ifneq ($(ROMFS),)
 	export _3DSXFLAGS += --romfs=$(CURDIR)/$(ROMFS)
 endif
 
-.PHONY: all clean
+.PHONY: all cia clean
 
 #---------------------------------------------------------------------------------
 all: $(BUILD) $(GFXBUILD) $(DEPSDIR) $(ROMFS_T3XFILES) $(T3XHFILES)
 	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
+	@bannertool makebanner -i $(TOPDIR)/banner.png -a $(TOPDIR)/audio.wav -o $(TOPDIR)/banner.bin || echo "WARNING: Could not create banner, skipping"
+	@bannertool makesmdh -s "$(APP_TITLE)" -l "$(APP_TITLE)" -p "$(APP_AUTHOR)" -i $(APP_ICON) -o $(TOPDIR)/icon.bin || echo "WARNING: Could not create icon, skipping"
 
 $(BUILD):
 	@mkdir -p $@
@@ -182,9 +186,14 @@ $(DEPSDIR):
 endif
 
 #---------------------------------------------------------------------------------
+cia: all
+	@makerom -f cia -o $(OUTPUT).cia -target t -exefslogo -elf $(OUTPUT).elf -icon $(TOPDIR)/icon.bin -banner $(TOPDIR)/banner.bin -rsf $(TOPDIR)/app.rsf -DAPP_TITLE="$(APP_TITLE)" -DAPP_PRODUCT_CODE="$(APP_PRODUCT_CODE)" -DAPP_UNIQUE_ID="$(APP_UNIQUE_ID)" || echo "WARNING: Could not create CIA file"
+	@echo "CIA file created: $(OUTPUT).cia"
+
+#---------------------------------------------------------------------------------
 clean:
 	@echo clean ...
-	@rm -fr $(BUILD) $(TARGET).3dsx $(OUTPUT).smdh $(TARGET).elf $(GFXBUILD)
+	@rm -fr $(BUILD) $(TARGET).3dsx $(OUTPUT).smdh $(TARGET).elf $(TARGET).cia $(TOPDIR)/banner.bin $(TOPDIR)/icon.bin $(GFXBUILD)
 
 #---------------------------------------------------------------------------------
 $(GFXBUILD)/%.t3x	$(BUILD)/%.h	:	%.t3s
