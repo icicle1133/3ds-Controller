@@ -141,12 +141,15 @@ def handle_linux_controller(data, device):
 def handle_controller_state(data, addr, gamepad):
     global last_update_time, last_button_state, connected_devices, gamepad_type
     
-    if addr not in connected_devices:
+    ip_address = addr[0]
+    device_key = ip_address  # Use only the IP address as the key, ignoring the port
+    
+    if device_key not in connected_devices:
         current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        print(f"[{current_time}] New 3DS connected from {addr}")
-        connected_devices[addr] = {"last_seen": time.time(), "name": f"3DS at {addr[0]}"}
+        print(f"[{current_time}] New 3DS connected from {ip_address}")
+        connected_devices[device_key] = {"last_seen": time.time(), "name": f"3DS at {ip_address}"}
     else:
-        connected_devices[addr]["last_seen"] = time.time()
+        connected_devices[device_key]["last_seen"] = time.time()
     
     current_time = time.time()
     if current_time - last_update_time < throttle_interval:
@@ -156,6 +159,14 @@ def handle_controller_state(data, addr, gamepad):
     if debug_mode:
         print(f"Received data length: {len(data)} bytes")
         print(f"Raw data: {data.hex()}")
+    
+    # Check if this is a ping message
+    if len(data) == 5 and data == b'ping\x00':
+        # Send pong response back
+        server_socket.sendto(b'pong', addr)
+        if debug_mode:
+            print(f"Ping received from {ip_address}, sent pong response")
+        return
     
     try:
         if len(data) >= 16:
@@ -181,7 +192,7 @@ def check_inactive_devices():
         connected_devices.pop(addr)
 
 def main():
-    global debug_mode, running, gamepad, gamepad_type
+    global debug_mode, running, gamepad, gamepad_type, server_socket
     
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)

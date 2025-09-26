@@ -11,8 +11,8 @@
 #include <netdb.h>
 
 #define DEFAULT_PORT 8888
-#define DEFAULT_SERVER_IP "192.168.1.1" // please change in case i didn't do config.ini correctly!
-#define CONFIG_FILE "/config.ini" // i swear if its because i didn't add a /
+#define DEFAULT_SERVER_IP "192.168.1.1"
+#define CONFIG_FILE "config.ini"
 #define MAX_LINE 256
 #define LCD_TOGGLE_KEY KEY_L
 #define CONNECTION_TIMEOUT_MS 5000
@@ -100,11 +100,13 @@ int initsocket(const config *cfg) {
     
     if (inet_pton(AF_INET, cfg->serverip, &serveraddr.sin_addr) <= 0) {
         printf("invalid address\n");
+        close(sockfd);
         return -1;
     }
     
     if (connect(sockfd, (struct sockaddr*)&serveraddr, sizeof(serveraddr)) < 0) {
         printf("connection failed\n");
+        close(sockfd);
         return -1;
     }
     
@@ -117,12 +119,12 @@ int initsocket(const config *cfg) {
 int checkconnection(int sockfd) {
     if (sockfd < 0) return 0;
     
-    char buffer[16];
-    memset(buffer, 0, sizeof(buffer));
-    strcpy(buffer, "ping");
+    char ping_buf[6] = "ping";
+    char pong_buf[6] = {0};
     
-    ssize_t sent = send(sockfd, buffer, 5, 0);
-    if (sent <= 0) return 0;
+    if (send(sockfd, ping_buf, 5, 0) <= 0) {
+        return 0;
+    }
     
     fd_set readfds;
     struct timeval timeout;
@@ -133,12 +135,13 @@ int checkconnection(int sockfd) {
     timeout.tv_sec = 1;
     timeout.tv_usec = 0;
     
-    memset(buffer, 0, sizeof(buffer));
-    
     if (select(sockfd + 1, &readfds, NULL, NULL, &timeout) > 0) {
-        ssize_t received = recv(sockfd, buffer, sizeof(buffer), 0);
-        if (received > 0 && strcmp(buffer, "pong") == 0) {
-            return 1;
+        ssize_t received = recv(sockfd, pong_buf, sizeof(pong_buf) - 1, 0);
+        if (received > 0) {
+            pong_buf[received] = '\0';
+            if (strcmp(pong_buf, "pong") == 0) {
+                return 1;
+            }
         }
     }
     
@@ -180,27 +183,18 @@ void printstatusmessage(int sockfd, const config *cfg, int isconnected, int lcds
     char batterystatus[32];
     getbatterystatus(batterystatus, sizeof(batterystatus));
     
-    // Top border with corners
     printf("\x1b[0;0H+----------------------+");
-    
-    // Title with padding
     printf("\x1b[1;0H|    \x1b[1;36m3DS CONTROLLER\x1b[0m    |");
-    
-    // Separator line
     printf("\x1b[2;0H+----------------------+");
     
-    // Status line with color indicator
     if (isconnected) {
         printf("\x1b[3;0H| Status: \x1b[32mCONNECTED\x1b[0m    |");
     } else {
         printf("\x1b[3;0H| Status: \x1b[31mNO CONNECTION\x1b[0m |");
     }
     
-    // Connection info
     printf("\x1b[4;0H| IP: %-16s |", cfg->serverip);
     printf("\x1b[5;0H| Port: %-15d |", cfg->port);
-    
-    // System status
     printf("\x1b[6;0H| Battery: %-11s |", batterystatus);
     
     if (lcdstate) {
@@ -209,13 +203,8 @@ void printstatusmessage(int sockfd, const config *cfg, int isconnected, int lcds
         printf("\x1b[7;0H| Display: \x1b[31mOFF\x1b[0m          |");
     }
     
-    // Separator before controls
     printf("\x1b[8;0H+----------------------+");
-    
-    // Controls header
     printf("\x1b[9;0H|      \x1b[1;33mCONTROLS\x1b[0m       |");
-    
-    // Control items
     printf("\x1b[10;0H| CirclePad: Left Stick |");
     printf("\x1b[11;0H| C-Stick: Right Stick  |");
     printf("\x1b[12;0H| A/B/X/Y: Face Buttons |");
@@ -230,8 +219,6 @@ void printstatusmessage(int sockfd, const config *cfg, int isconnected, int lcds
     
     printf("\x1b[15;0H| Hold %s: Toggle LCD   |", keylabel);
     printf("\x1b[16;0H| START+SELECT: Exit    |");
-    
-    // Bottom border
     printf("\x1b[17;0H+----------------------+");
 }
 
@@ -266,7 +253,6 @@ int main(int argc, char **argv) {
     printf("\ncalibration complete!\n");
     
     u32 laststatusupdate = 0;
-    u32 keyheldtime = 0;
     
     while (aptMainLoop()) {
         hidScanInput();
@@ -284,7 +270,7 @@ int main(int argc, char **argv) {
             if (!isconnected && sockfd >= 0) {
                 close(sockfd);
                 sockfd = -1;
-            } else if (!isconnected) {
+            } else if (!isconnected && sockfd < 0) {
                 sockfd = initsocket(&cfg);
             }
         }
@@ -326,7 +312,7 @@ int main(int argc, char **argv) {
         gfxSwapBuffers();
         
         gspWaitForVBlank();
-        
+
         // i accidently flooded my network so this was added lol
         svcSleepThread(33333333);
     }

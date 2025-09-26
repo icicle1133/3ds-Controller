@@ -43,7 +43,7 @@ GFXBUILD	:=	$(BUILD)
 
 APP_TITLE       := 3DS Controller
 APP_DESCRIPTION := Use 3DS as a wireless PC controller
-APP_AUTHOR      := Your Name
+APP_AUTHOR      := icicle1133
 
 #---------------------------------------------------------------------------------
 # options for code generation
