@@ -1,0 +1,119 @@
+BasicInfo:
+  Title                   : "$(APP_TITLE)"
+  ProductCode             : "$(APP_PRODUCT_CODE)"
+  Logo                    : Nintendo # Nintendo / Licensed / Distributed / iQue / iQueForSystem
+
+TitleInfo:
+  Category                : Application
+  UniqueId                : $(APP_UNIQUE_ID)
+
+Option:
+  UseOnSD                 : true # true if App is to be installed to SD
+  FreeProductCode         : true # Removes limitations on ProductCode
+  MediaFootPadding        : false # If true CCI files are created with padding
+  EnableCrypt             : false # Enables encryption for NCCH and CIA
+  EnableCompress          : true # Compresses where applicable (currently only exefs:/.code)
+  
+SystemControlInfo:
+  SaveDataSize: 128KB
+  RemasterVersion: 0
+  StackSize: 0x4000
+  
+AccessControlInfo:
+  CoreVersion                   : 2
+  DescVersion                   : 2
+  ReleaseKernelMajor            : "02"
+  ReleaseKernelMinor            : "33" 
+
+  FileSystemAccess:
+   - DirectSdmc
+   - Core
+   
+  IoAccessControl:
+   - FsMountNand
+   - FsMountNandRoWrite
+
+  MemoryType                    : Application
+  SystemMode                    : 64MB
+  IdealProcessor                : 0
+  AffinityMask                  : 1
+  Priority                      : 16
+  MaxCpu                        : 0x9E
+  HandleTableSize               : 0x200
+  DisableDebug                  : false
+  EnableForceDebug              : false
+  CanWriteSharedPage            : true
+  CanUsePrivilegedPriority      : false
+  CanUseNonAlphabetAndNumber    : true
+  PermitMainFunctionArgument    : true
+  CanShareDeviceMemory          : true
+  RunnableOnSleep               : false
+  SpecialMemoryArrange          : true
+
+  SystemModeExt                 : Legacy
+  CpuSpeed                      : 804MHz
+  EnableL2Cache                 : false
+  CanAccessCore2                : false
+
+  SystemCallAccess: 
+    ArbitrateAddress: 34
+    Break: 60
+    CancelTimer: 28
+    ClearEvent: 25
+    ClearTimer: 29
+    CloseHandle: 35
+    ConnectToPort: 45
+    ControlMemory: 1
+    CreateAddressArbiter: 33
+    CreateEvent: 23
+    CreateMemoryBlock: 30
+    CreateMutex: 19
+    CreateSemaphore: 21
+    CreateThread: 8
+    CreateTimer: 26
+    DuplicateHandle: 39
+    ExitProcess: 3
+    ExitThread: 9
+    GetCurrentProcessorNumber: 17
+    GetHandleInfo: 41
+    GetProcessId: 53
+    GetProcessIdOfThread: 54
+    GetProcessIdealProcessor: 6
+    GetProcessInfo: 43
+    GetResourceLimit: 56
+    GetResourceLimitCurrentValue: 58
+    GetResourceLimitLimitValue: 57
+    GetSystemInfo: 42
+    GetSystemTick: 40
+    GetThreadContext: 59
+    GetThreadId: 55
+    GetThreadIdealProcessor: 15
+    GetThreadInfo: 44
+    GetThreadPriority: 11
+    MapMemoryBlock: 31
+    OutputDebugString: 61
+    QueryMemory: 2
+    ReleaseMutex: 20
+    ReleaseSemaphore: 22
+    SendSyncRequest1: 46
+    SendSyncRequest2: 47
+    SendSyncRequest3: 48
+    SendSyncRequest4: 49
+    SendSyncRequest: 50
+    SetThreadPriority: 12
+    SetTimer: 27
+    SignalEvent: 24
+    SleepThread: 10
+    UnmapMemoryBlock: 32
+    WaitSynchronization1: 36
+    WaitSynchronizationN: 37
+
+  ServiceAccessControl:
+   - APT:U
+   - AC:U
+   - FS:USER
+   - GSP::Gpu
+   - HID:USER
+   - NDM:U
+   - PTM:U
+   - SOC:U
