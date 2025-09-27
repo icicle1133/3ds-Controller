@@ -1,6 +1,6 @@
 #ifndef KEYBOARD_H
 #define KEYBOARD_H
-
+// THIS WILL BUILD AND COMPILE CORRECRTLY, BUT THE KEYBOARD DOES NOT SHOW.
 #include <3ds.h>
 #include <string.h>
 
