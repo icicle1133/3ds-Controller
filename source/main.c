@@ -9,7 +9,6 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <netdb.h>
-#include "h/keyboard.h"
 
 #define DEFAULT_PORT 8888
 #define DEFAULT_SERVER_IP "192.168.1.1"
@@ -219,9 +218,8 @@ void printstatusmessage(int sockfd, const config *cfg, int isconnected, int lcds
     else if (cfg->lcdtogglekey == KEY_SELECT) strcpy(keylabel, "SELECT");
     
     printf("\x1b[15;0H| Hold %s: Toggle LCD   |", keylabel);
-    printf("\x1b[16;0H| SELECT+Y: Keyboard    |");
-    printf("\x1b[17;0H| START+SELECT: Exit    |");
-    printf("\x1b[18;0H+----------------------+");
+    printf("\x1b[16;0H| START+SELECT: Exit    |");
+    printf("\x1b[17;0H+----------------------+");
 }
 
 int main(int argc, char **argv) {
@@ -233,9 +231,6 @@ int main(int argc, char **argv) {
     
     config cfg;
     readconfigfile(&cfg);
-    
-    keyboard kb;
-    keyboard_init(&kb);
     
     printf("3ds controller\n");
     printf("connecting to pc at %s:%d...\n", cfg.serverip, cfg.port);
@@ -262,23 +257,11 @@ int main(int argc, char **argv) {
     while (aptMainLoop()) {
         hidScanInput();
         u32 keysdown = hidKeysHeld();
-        u32 keyspressed = hidKeysDown();
         
         if ((keysdown & KEY_START) && (keysdown & KEY_SELECT)) 
             break;
         
         u32 currenttime = osGetTime();
-        
-        if ((keyspressed & KEY_Y) && (keysdown & KEY_SELECT)) {
-            if (isconnected) {
-                if (keyboard_get(&kb, "Enter message", "", 100)) {
-                    const char* text = keyboard_get_text(&kb);
-                    keyboard_send(sockfd, text);
-                    keyboard_clear(&kb);
-                    laststatusupdate = 0;
-                }
-            }
-        }
         
         if (currenttime - connectionchecktime > 2000) {
             isconnected = checkconnection(sockfd);
