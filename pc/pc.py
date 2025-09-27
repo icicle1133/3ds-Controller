@@ -121,9 +121,12 @@ def handle_linux_controller(data, gamepad):
     global last_button_state
     buttons = struct.unpack("=I", data[0:4])[0]
     
+    if debug_mode:
+        print(f"Linux buttons: {buttons:032b}")
+    
     for key, ui_btn in [(KEY_A, uinput.BTN_A), (KEY_B, uinput.BTN_B), (KEY_X, uinput.BTN_X), (KEY_Y, uinput.BTN_Y), 
                         (KEY_L, uinput.BTN_TL), (KEY_R, uinput.BTN_TR), (KEY_START, uinput.BTN_START), (KEY_SELECT, uinput.BTN_SELECT)]:
-        if (buttons & key) != (last_button_state & key): gamepad.emit(ui_btn, 1 if buttons & key else 0)
+        gamepad.emit(ui_btn, 1 if buttons & key else 0)
     
     gamepad.emit(uinput.ABS_Z, 255 if buttons & KEY_ZL else 0)
     gamepad.emit(uinput.ABS_RZ, 255 if buttons & KEY_ZR else 0)
@@ -132,10 +135,12 @@ def handle_linux_controller(data, gamepad):
     
     circlepad_x, circlepad_y = struct.unpack("=h", data[4:6])[0], struct.unpack("=h", data[6:8])[0]
     cstick_x, cstick_y = struct.unpack("=h", data[12:14])[0] if len(data) >= 14 else 0, struct.unpack("=h", data[14:16])[0] if len(data) >= 16 else 0
+    
     gamepad.emit(uinput.ABS_X, map_axis_to_platform(map_axis_value(circlepad_x), "uinput"))
     gamepad.emit(uinput.ABS_Y, map_axis_to_platform(map_axis_value(-circlepad_y), "uinput"))
     gamepad.emit(uinput.ABS_RX, map_axis_to_platform(map_axis_value(cstick_x), "uinput"))
     gamepad.emit(uinput.ABS_RY, map_axis_to_platform(map_axis_value(-cstick_y), "uinput"))
+    
     gamepad.syn()
     last_button_state = buttons
 
@@ -168,7 +173,7 @@ def handle_controller_state(data, addr, gamepad):
         return
     
     try:
-        if len(data) >= 16:
+        if len(data) >= 8:  # Changed from 16 to 8 since we need at least 8 bytes for buttons and circlepad
             if gamepad_type == "vgamepad": handle_windows_controller(data, gamepad)
             elif gamepad_type == "uinput": handle_linux_controller(data, gamepad)
         elif debug_mode:
@@ -237,5 +242,6 @@ def main():
             gamepad.reset()
         server_socket.close()
         print("Socket closed. Exiting.")
+
 if __name__ == "__main__":
     main()
