@@ -7,7 +7,6 @@ throttle_interval, gamepad, connected_devices = 0.01, None, {}
 KEY_A, KEY_B, KEY_SELECT, KEY_START = 1, 2, 4, 8
 KEY_DRIGHT, KEY_DLEFT, KEY_DUP, KEY_DDOWN = 16, 32, 64, 128
 KEY_R, KEY_L, KEY_X, KEY_Y, KEY_ZL, KEY_ZR = 256, 512, 1024, 2048, 4096, 8192
-KEYBOARD_PACKET_IDENTIFIER = 0x4B424430  # "KBD0" as integer
 
 os_name = platform.system()
 print(f"Detected OS: {os_name}")
@@ -161,7 +160,14 @@ def handle_controller_state(data, addr, gamepad):
     if debug_mode:
         print(f"Received data length: {len(data)} bytes")
         print(f"Raw data: {data.hex()}")
-                
+    
+    if len(data) == 5 and data == b'ping\x00':
+        server_socket.sendto(b'pong', addr)
+        if debug_mode:
+            print(f"Ping received from {ip_address}, sent pong response")
+        return
+    
+    try:
         if len(data) >= 16:
             if gamepad_type == "vgamepad": handle_windows_controller(data, gamepad)
             elif gamepad_type == "uinput": handle_linux_controller(data, gamepad)
