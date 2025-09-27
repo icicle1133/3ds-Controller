@@ -31,7 +31,6 @@ int keyboard_get(keyboard *kb, const char *hint, const char *initialtext, int ma
     
     swkbdSetHintText(&kb->swkbd, hint);
     swkbdSetInitialText(&kb->swkbd, initialtext);
-    swkbdSetMaxLength(&kb->swkbd, maxlength);
     
     kb->status = swkbdInputText(&kb->swkbd, kb->text, maxlength);
     
@@ -40,10 +39,6 @@ int keyboard_get(keyboard *kb, const char *hint, const char *initialtext, int ma
 
 void keyboard_set_validation(keyboard *kb, SwkbdValidInput validation, int checkdigits) {
     swkbdSetValidation(&kb->swkbd, validation, 0, checkdigits);
-}
-
-void keyboard_set_filter(keyboard *kb, SwkbdFilterCallback filter) {
-    swkbdSetFilterCallback(&kb->swkbd, filter);
 }
 
 void keyboard_set_password(keyboard *kb, int enable) {
