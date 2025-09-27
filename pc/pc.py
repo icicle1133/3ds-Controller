@@ -237,6 +237,5 @@ def main():
             gamepad.reset()
         server_socket.close()
         print("Socket closed. Exiting.")
-
 if __name__ == "__main__":
     main()
