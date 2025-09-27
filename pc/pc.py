@@ -140,26 +140,6 @@ def handle_linux_controller(data, gamepad):
     gamepad.syn()
     last_button_state = buttons
 
-def handle_keyboard_data(data, addr):
-    try:
-        text_end = data[4:].find(b'\x00')
-        if text_end == -1:
-            text_end = len(data) - 4
-        
-        text = data[4:4+text_end].decode('utf-8')
-        ip_address = addr[0]
-        
-        current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        print(f"[{current_time}] Keyboard input from {ip_address}: {text}")
-        
-        # Here you can add any specific processing for the keyboard text
-        # For example, you might want to simulate typing this text
-        # or execute commands based on the input
-        
-    except Exception as e:
-        if debug_mode:
-            print(f"Error processing keyboard data: {e}")
-
 def handle_controller_state(data, addr, gamepad):
     global last_update_time, last_button_state, connected_devices, gamepad_type
     
@@ -181,19 +161,6 @@ def handle_controller_state(data, addr, gamepad):
     if debug_mode:
         print(f"Received data length: {len(data)} bytes")
         print(f"Raw data: {data.hex()}")
-    
-    if len(data) == 5 and data == b'ping\x00':
-        server_socket.sendto(b'pong', addr)
-        if debug_mode:
-            print(f"Ping received from {ip_address}, sent pong response")
-        return
-    
-    try:
-        if len(data) >= 4:
-            packet_type = struct.unpack("=I", data[0:4])[0]
-            if packet_type == KEYBOARD_PACKET_IDENTIFIER:
-                handle_keyboard_data(data, addr)
-                return
                 
         if len(data) >= 16:
             if gamepad_type == "vgamepad": handle_windows_controller(data, gamepad)
@@ -240,7 +207,6 @@ def main():
     print(f"Running in {gamepad_type} mode for {os_name}")
     print("Listening on port 8888...")
     print("Press Ctrl+C to exit")
-    print("Keyboard input support is enabled")
     
     last_check_time = time.time()
     
