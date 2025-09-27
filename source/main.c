@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <netdb.h>
+#include "h/keyboard.h"
 
 #define DEFAULT_PORT 8888
 #define DEFAULT_SERVER_IP "192.168.1.1"

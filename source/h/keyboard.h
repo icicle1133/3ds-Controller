@@ -5,12 +5,18 @@
 #include <string.h>
 
 #define KEYBOARD_MAX_TEXT 256
+#define KEYBOARD_PACKET_IDENTIFIER 0x4B424430 // "KBD0" as integer
 
 typedef struct {
     SwkbdState swkbd;
     char text[KEYBOARD_MAX_TEXT];
     int status;
 } keyboard;
+
+typedef struct {
+    u32 packettype;           // 4 bytes - set to KEYBOARD_PACKET_IDENTIFIER
+    char textdata[KEYBOARD_MAX_TEXT];
+} keyboardpacket;
 
 int keyboard_init(keyboard *kb) {
     swkbdInit(&kb->swkbd, SWKBD_TYPE_NORMAL, 2, -1);
@@ -50,6 +56,16 @@ const char* keyboard_get_text(keyboard *kb) {
 
 void keyboard_clear(keyboard *kb) {
     memset(kb->text, 0, KEYBOARD_MAX_TEXT);
+}
+
+int keyboard_send(int sockfd, const char *text) {
+    keyboardpacket packet;
+    memset(&packet, 0, sizeof(keyboardpacket));
+    
+    packet.packettype = KEYBOARD_PACKET_IDENTIFIER;
+    strncpy(packet.textdata, text, KEYBOARD_MAX_TEXT - 1);
+    
+    return send(sockfd, &packet, sizeof(keyboardpacket), 0);
 }
 
 #endif

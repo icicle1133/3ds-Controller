@@ -3,9 +3,11 @@ import socket, struct, time, signal, sys, os, datetime, platform
 debug_mode, last_update_time, last_button_state, running = False, time.time(), 0, True
 throttle_interval, gamepad, connected_devices = 0.01, None, {}
 
+# Define constants
 KEY_A, KEY_B, KEY_SELECT, KEY_START = 1, 2, 4, 8
 KEY_DRIGHT, KEY_DLEFT, KEY_DUP, KEY_DDOWN = 16, 32, 64, 128
 KEY_R, KEY_L, KEY_X, KEY_Y, KEY_ZL, KEY_ZR = 256, 512, 1024, 2048, 4096, 8192
+KEYBOARD_PACKET_IDENTIFIER = 0x4B424430  # "KBD0" as integer
 
 os_name = platform.system()
 print(f"Detected OS: {os_name}")
@@ -116,33 +118,53 @@ def handle_windows_controller(data, gamepad):
     gamepad.update()
     last_button_state = buttons
 
-def handle_linux_controller(data, device):
+def handle_linux_controller(data, gamepad):
     global last_button_state
     buttons = struct.unpack("=I", data[0:4])[0]
     
     for key, ui_btn in [(KEY_A, uinput.BTN_A), (KEY_B, uinput.BTN_B), (KEY_X, uinput.BTN_X), (KEY_Y, uinput.BTN_Y), 
                         (KEY_L, uinput.BTN_TL), (KEY_R, uinput.BTN_TR), (KEY_START, uinput.BTN_START), (KEY_SELECT, uinput.BTN_SELECT)]:
-        if (buttons & key) != (last_button_state & key): device.emit(ui_btn, 1 if buttons & key else 0)
+        if (buttons & key) != (last_button_state & key): gamepad.emit(ui_btn, 1 if buttons & key else 0)
     
-    device.emit(uinput.ABS_Z, 255 if buttons & KEY_ZL else 0)
-    device.emit(uinput.ABS_RZ, 255 if buttons & KEY_ZR else 0)
-    device.emit(uinput.ABS_HAT0Y, -1 if buttons & KEY_DUP else 1 if buttons & KEY_DDOWN else 0)
-    device.emit(uinput.ABS_HAT0X, -1 if buttons & KEY_DLEFT else 1 if buttons & KEY_DRIGHT else 0)
+    gamepad.emit(uinput.ABS_Z, 255 if buttons & KEY_ZL else 0)
+    gamepad.emit(uinput.ABS_RZ, 255 if buttons & KEY_ZR else 0)
+    gamepad.emit(uinput.ABS_HAT0Y, -1 if buttons & KEY_DUP else 1 if buttons & KEY_DDOWN else 0)
+    gamepad.emit(uinput.ABS_HAT0X, -1 if buttons & KEY_DLEFT else 1 if buttons & KEY_DRIGHT else 0)
     
     circlepad_x, circlepad_y = struct.unpack("=h", data[4:6])[0], struct.unpack("=h", data[6:8])[0]
     cstick_x, cstick_y = struct.unpack("=h", data[12:14])[0] if len(data) >= 14 else 0, struct.unpack("=h", data[14:16])[0] if len(data) >= 16 else 0
-    device.emit(uinput.ABS_X, map_axis_to_platform(map_axis_value(circlepad_x), "uinput"))
-    device.emit(uinput.ABS_Y, map_axis_to_platform(map_axis_value(-circlepad_y), "uinput"))
-    device.emit(uinput.ABS_RX, map_axis_to_platform(map_axis_value(cstick_x), "uinput"))
-    device.emit(uinput.ABS_RY, map_axis_to_platform(map_axis_value(-cstick_y), "uinput"))
-    device.syn()
+    gamepad.emit(uinput.ABS_X, map_axis_to_platform(map_axis_value(circlepad_x), "uinput"))
+    gamepad.emit(uinput.ABS_Y, map_axis_to_platform(map_axis_value(-circlepad_y), "uinput"))
+    gamepad.emit(uinput.ABS_RX, map_axis_to_platform(map_axis_value(cstick_x), "uinput"))
+    gamepad.emit(uinput.ABS_RY, map_axis_to_platform(map_axis_value(-cstick_y), "uinput"))
+    gamepad.syn()
     last_button_state = buttons
+
+def handle_keyboard_data(data, addr):
+    try:
+        text_end = data[4:].find(b'\x00')
+        if text_end == -1:
+            text_end = len(data) - 4
+        
+        text = data[4:4+text_end].decode('utf-8')
+        ip_address = addr[0]
+        
+        current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        print(f"[{current_time}] Keyboard input from {ip_address}: {text}")
+        
+        # Here you can add any specific processing for the keyboard text
+        # For example, you might want to simulate typing this text
+        # or execute commands based on the input
+        
+    except Exception as e:
+        if debug_mode:
+            print(f"Error processing keyboard data: {e}")
 
 def handle_controller_state(data, addr, gamepad):
     global last_update_time, last_button_state, connected_devices, gamepad_type
     
     ip_address = addr[0]
-    device_key = ip_address  # Use only the IP address as the key, ignoring the port
+    device_key = ip_address
     
     if device_key not in connected_devices:
         current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -160,15 +182,19 @@ def handle_controller_state(data, addr, gamepad):
         print(f"Received data length: {len(data)} bytes")
         print(f"Raw data: {data.hex()}")
     
-    # Check if this is a ping message
     if len(data) == 5 and data == b'ping\x00':
-        # Send pong response back
         server_socket.sendto(b'pong', addr)
         if debug_mode:
             print(f"Ping received from {ip_address}, sent pong response")
         return
     
     try:
+        if len(data) >= 4:
+            packet_type = struct.unpack("=I", data[0:4])[0]
+            if packet_type == KEYBOARD_PACKET_IDENTIFIER:
+                handle_keyboard_data(data, addr)
+                return
+                
         if len(data) >= 16:
             if gamepad_type == "vgamepad": handle_windows_controller(data, gamepad)
             elif gamepad_type == "uinput": handle_linux_controller(data, gamepad)
@@ -214,6 +240,7 @@ def main():
     print(f"Running in {gamepad_type} mode for {os_name}")
     print("Listening on port 8888...")
     print("Press Ctrl+C to exit")
+    print("Keyboard input support is enabled")
     
     last_check_time = time.time()
     
