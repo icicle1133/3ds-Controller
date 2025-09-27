@@ -47,6 +47,15 @@ APP_AUTHOR      := Your Name
 APP_PRODUCT_CODE := CTR-P-3DSC
 APP_UNIQUE_ID   := 0xA1B2C
 
+# Check OS and set correct path for tools
+ifeq ($(shell uname), Linux)
+	BANNERTOOL := ./bannertool
+	MAKEROM := ./makerom
+else
+	BANNERTOOL := bannertool
+	MAKEROM := makerom
+endif
+
 #---------------------------------------------------------------------------------
 # options for code generation
 #---------------------------------------------------------------------------------
@@ -169,8 +178,8 @@ endif
 #---------------------------------------------------------------------------------
 all: $(BUILD) $(GFXBUILD) $(DEPSDIR) $(ROMFS_T3XFILES) $(T3XHFILES)
 	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
-	@bannertool makebanner -i $(TOPDIR)/banner.png -a $(TOPDIR)/audio.wav -o $(TOPDIR)/banner.bin || echo "WARNING: Could not create banner, skipping"
-	@bannertool makesmdh -s "$(APP_TITLE)" -l "$(APP_TITLE)" -p "$(APP_AUTHOR)" -i $(APP_ICON) -o $(TOPDIR)/icon.bin || echo "WARNING: Could not create icon, skipping"
+	@$(BANNERTOOL) makebanner -i $(TOPDIR)/banner.png -a $(TOPDIR)/audio.wav -o $(TOPDIR)/banner.bin || echo "WARNING: Could not create banner, skipping"
+	@$(BANNERTOOL) makesmdh -s "$(APP_TITLE)" -l "$(APP_TITLE)" -p "$(APP_AUTHOR)" -i $(APP_ICON) -o $(TOPDIR)/icon.bin || echo "WARNING: Could not create icon, skipping"
 
 $(BUILD):
 	@mkdir -p $@
@@ -187,7 +196,7 @@ endif
 
 #---------------------------------------------------------------------------------
 cia: all
-	@makerom -f cia -o $(OUTPUT).cia -target t -exefslogo -elf $(OUTPUT).elf -icon $(TOPDIR)/icon.bin -banner $(TOPDIR)/banner.bin -rsf $(TOPDIR)/app.rsf -DAPP_TITLE="$(APP_TITLE)" -DAPP_PRODUCT_CODE="$(APP_PRODUCT_CODE)" -DAPP_UNIQUE_ID="$(APP_UNIQUE_ID)" || echo "WARNING: Could not create CIA file"
+	@$(MAKEROM) -f cia -o $(OUTPUT).cia -target t -exefslogo -elf $(OUTPUT).elf -icon $(TOPDIR)/icon.bin -banner $(TOPDIR)/banner.bin -rsf $(TOPDIR)/app.rsf -DAPP_TITLE="$(APP_TITLE)" -DAPP_PRODUCT_CODE="$(APP_PRODUCT_CODE)" -DAPP_UNIQUE_ID="$(APP_UNIQUE_ID)" || echo "WARNING: Could not create CIA file"
 	@echo "CIA file created: $(OUTPUT).cia"
 
 #---------------------------------------------------------------------------------
