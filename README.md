@@ -62,7 +62,7 @@ An up-to-date 3DS homebrew application that lets you use your Nintendo 3DS as a 
 3. Run PC receiver with root privileges:
    ```
    su -
-
+   modprobe python-uinput
    python3 path/to/pc.py
    ```
 
