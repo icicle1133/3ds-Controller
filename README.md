@@ -63,7 +63,7 @@ An up-to-date 3DS homebrew application that lets you use your Nintendo 3DS as a 
    ```
    su -
    modprobe python-uinput
-   python3 path/to/pc.py
+   python3 pc.py
    ```
 
 ## Usage
