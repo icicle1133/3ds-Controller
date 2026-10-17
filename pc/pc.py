@@ -6,7 +6,9 @@ throttle_interval, gamepad, connected_devices = 0.01, None, {}
 # Define constants
 KEY_A, KEY_B, KEY_SELECT, KEY_START = 1, 2, 4, 8
 KEY_DRIGHT, KEY_DLEFT, KEY_DUP, KEY_DDOWN = 16, 32, 64, 128
-KEY_R, KEY_L, KEY_X, KEY_Y, KEY_ZL, KEY_ZR = 256, 512, 1024, 2048, 4096, 8192
+KEY_R, KEY_L, KEY_X, KEY_Y = 256, 512, 1024, 2048
+# In 3DS libctru, KEY_ZL is BIT(14)=16384 and KEY_ZR is BIT(15)=32768
+KEY_ZL, KEY_ZR = 16384, 32768
 
 os_name = platform.system()
 print(f"Detected OS: {os_name}")
@@ -51,7 +53,8 @@ def setup_controller():
             return gamepad
         elif gamepad_type == "uinput":
             events = (
-                uinput.BTN_A, uinput.BTN_B, uinput.BTN_X, uinput.BTN_Y, uinput.BTN_TL, uinput.BTN_TR,
+                uinput.BTN_A, uinput.BTN_B, uinput.BTN_X, uinput.BTN_Y,
+                uinput.BTN_TL, uinput.BTN_TR, uinput.BTN_TL2, uinput.BTN_TR2,
                 uinput.BTN_START, uinput.BTN_SELECT, uinput.BTN_THUMBL, uinput.BTN_THUMBR,
                 uinput.ABS_X + (0, 255, 0, 0), uinput.ABS_Y + (0, 255, 0, 0),
                 uinput.ABS_RX + (0, 255, 0, 0), uinput.ABS_RY + (0, 255, 0, 0),
@@ -110,8 +113,8 @@ def handle_windows_controller(data, gamepad):
                    vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_LEFT, vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_RIGHT]:
             gamepad.release_button(btn)
     
-    circlepad_x, circlepad_y = struct.unpack("=h", data[4:6])[0], struct.unpack("=h", data[6:8])[0]
-    cstick_x, cstick_y = struct.unpack("=h", data[12:14])[0] if len(data) >= 14 else 0, struct.unpack("=h", data[14:16])[0] if len(data) >= 16 else 0
+    circlepad_x, circlepad_y = struct.unpack("=hh", data[4:8])
+    cstick_x, cstick_y = struct.unpack("=hh", data[8:12]) if len(data) >= 12 else (0, 0)
     gamepad.left_joystick(map_axis_value(circlepad_x), map_axis_value(-circlepad_y))
     gamepad.right_joystick(map_axis_value(cstick_x), map_axis_value(-cstick_y))
     gamepad.update()
@@ -128,13 +131,15 @@ def handle_linux_controller(data, gamepad):
                         (KEY_L, uinput.BTN_TL), (KEY_R, uinput.BTN_TR), (KEY_START, uinput.BTN_START), (KEY_SELECT, uinput.BTN_SELECT)]:
         gamepad.emit(ui_btn, 1 if buttons & key else 0)
     
+    gamepad.emit(uinput.BTN_TL2, 1 if buttons & KEY_ZL else 0)
+    gamepad.emit(uinput.BTN_TR2, 1 if buttons & KEY_ZR else 0)
     gamepad.emit(uinput.ABS_Z, 255 if buttons & KEY_ZL else 0)
     gamepad.emit(uinput.ABS_RZ, 255 if buttons & KEY_ZR else 0)
     gamepad.emit(uinput.ABS_HAT0Y, -1 if buttons & KEY_DUP else 1 if buttons & KEY_DDOWN else 0)
     gamepad.emit(uinput.ABS_HAT0X, -1 if buttons & KEY_DLEFT else 1 if buttons & KEY_DRIGHT else 0)
     
-    circlepad_x, circlepad_y = struct.unpack("=h", data[4:6])[0], struct.unpack("=h", data[6:8])[0]
-    cstick_x, cstick_y = struct.unpack("=h", data[12:14])[0] if len(data) >= 14 else 0, struct.unpack("=h", data[14:16])[0] if len(data) >= 16 else 0
+    circlepad_x, circlepad_y = struct.unpack("=hh", data[4:8])
+    cstick_x, cstick_y = struct.unpack("=hh", data[8:12]) if len(data) >= 12 else (0, 0)
     
     gamepad.emit(uinput.ABS_X, map_axis_to_platform(map_axis_value(circlepad_x), "uinput"))
     gamepad.emit(uinput.ABS_Y, map_axis_to_platform(map_axis_value(-circlepad_y), "uinput"))
